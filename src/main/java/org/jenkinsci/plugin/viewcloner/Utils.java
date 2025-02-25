@@ -35,255 +35,284 @@ import org.xml.sax.SAXException;
 
 public class Utils {
 
-	final static String CONFIG_XML_PATH = "/config.xml";
-	/**
-	 * Gets config.xml of the object that viewPath points at.
-	 * 
-	 * @param objectPath
-	 *            Absolute url
-	 * @param authStringEnc
-	 *            authentication
-	 * @return Returns config.xml of the object that viewPath points at.
-	 */
-	static Document getConfig(String objectPath, String authStringEnc) {
+    final static String CONFIG_XML_PATH = "/config.xml";
 
-		String configPath = objectPath + CONFIG_XML_PATH;
-		URL url = null;
-		HttpURLConnection conn = null;
-		try {
-			url = new URL(configPath);
-		} catch (MalformedURLException e) {
-			throw new RuntimeException(e);
-		}
-		try {
-			conn = (HttpURLConnection) url.openConnection();
-			conn.setRequestProperty("Authorization", "Basic " + authStringEnc);
-			Document xml = streamToDoc(conn.getInputStream());
-			int response = conn.getResponseCode();	
-			if(response != 200){
-				throw new RuntimeException("Unable to access " + configPath + "\nResponce code: " + response);
-			}
-			return xml;
-		} catch (IOException e) {
-			throw new RuntimeException("Unable to access " + configPath , e);
-		}
-	}
+    /**
+     * Gets config.xml of the object that viewPath points at.
+     *
+     * @param objectPath Absolute url
+     * @param authStringEnc authentication
+     * @return Returns config.xml of the object that viewPath points at.
+     */
+    static Document getConfig(String objectPath, String authStringEnc) {
 
-	/**
-	 * Creates a view via jenkins Remote access API.
-	 * 
-	 * @param parentViewPath
-	 *            view that createItem will be called on
-	 * @param niewViewName
-	 *            name of the view we are trying to create
-	 * @param viewConfig
-	 *            config.xml that view will be created from
-	 * @param authStringEnc
-	 *            authentication
-	 */
-	static void createView(String parentViewPath, String niewViewName, String viewConfig, String authStringEnc) {
-		try {
-			String url = parentViewPath + "/createView?name=" + niewViewName;
-			URL obj = new URL(url);
-			HttpURLConnection conn = (HttpURLConnection) obj.openConnection();
+        String configPath = objectPath + CONFIG_XML_PATH;
+        URL url = null;
+        HttpURLConnection conn = null;
+        try {
+            url = new URL(configPath);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+        try {
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestProperty("Authorization", "Basic " + authStringEnc);
+            Document xml = streamToDoc(conn.getInputStream());
+            int response = conn.getResponseCode();
+            if (response != 200) {
+                throw new RuntimeException("Unable to access " + configPath + "\nResponse code: " + response);
+            }
+            return xml;
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to access " + configPath, e);
+        }
+    }
 
-			conn.setRequestMethod("POST");
-			conn.setRequestProperty("Authorization", "Basic " + authStringEnc);
-			conn.setRequestProperty("Content-Type", "text/xml");
-			conn.setDoOutput(true);
-			DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
+    /**
+     * Creates a view via jenkins Remote access API.
+     *
+     * @param parentViewPath view that createItem will be called on
+     * @param niewViewName name of the view we are trying to create
+     * @param viewConfig config.xml that view will be created from
+     * @param authStringEnc authentication
+     */
+    static void createView(String parentViewPath, String niewViewName, String viewConfig, String authStringEnc) {
+        try {
+            String url = parentViewPath + "/createView?name=" + niewViewName;
+            URL obj = new URL(url);
+            HttpURLConnection conn = (HttpURLConnection) obj.openConnection();
 
-			wr.writeBytes(viewConfig);
-			wr.flush();
-			wr.close();
-			int response = conn.getResponseCode();
-			if(response != 200){
-				throw new RuntimeException("Unable to create a view \nResponce code: " + response);
-			}
-		} catch (IOException e) {
-			throw new RuntimeException("Unable to create a view" + e);
-		}
-	}
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Authorization", "Basic " + authStringEnc);
+            conn.setRequestProperty("Content-Type", "text/xml");
+            conn.setDoOutput(true);
+            DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
 
-	/**
-	 * Converts java.io.InputStream into org.w3c.dom.Document.
-	 * 
-	 * @param inputStream
-	 * @return Returns org.w3c.dom.Document
-	 * @see <a href=
-	 *      "https://docs.oracle.com/javase/7/docs/api/org/w3c/dom/Document.html">
-	 *      Document</a>
-	 */
-	static Document streamToDoc(InputStream inputStream) {
-		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-		DocumentBuilder dBuilder;
-		Document doc = null;
-		try {
-			dBuilder = dbFactory.newDocumentBuilder();
-			doc = dBuilder.parse(inputStream);
-		} catch (ParserConfigurationException | SAXException | IOException e) {
-			throw new RuntimeException(e);
-		}
+            wr.writeBytes(viewConfig);
+            wr.flush();
+            wr.close();
+            int response = conn.getResponseCode();
+            if (response != 200) {
+                throw new RuntimeException("Unable to create a view \nResponse code: " + response);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to create a view" + e);
+        }
+    }
 
-		return doc;
-	}
+    /**
+     * Converts java.io.InputStream into org.w3c.dom.Document.
+     *
+     * @param inputStream
+     * @return Returns org.w3c.dom.Document
+     * @see <a href="https://docs.oracle.com/javase/7/docs/api/org/w3c/dom/Document.html">Document</a>
+     */
+    static Document streamToDoc(InputStream inputStream) {
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder dBuilder;
+        Document doc = null;
+        try {
+            dBuilder = dbFactory.newDocumentBuilder();
+            doc = dBuilder.parse(inputStream);
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+            throw new RuntimeException(e);
+        }
 
-	/**
-	 * Converts org.w3c.dom.Document into java.io.InputStream
-	 * 
-	 * @param doc
-	 * @return Returns java.io.InputStream
-	 * @see <a href=
-	 *      "https://docs.oracle.com/javase/7/docs/api/org/w3c/dom/Document.html">
-	 *      Document</a> 
-	 */
-	static InputStream docToStream(Document doc) {
+        return doc;
+    }
 
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		Source xmlSource = new DOMSource(doc);
-		Result outputTarget = new StreamResult(outputStream);
-		try {
-			TransformerFactory.newInstance().newTransformer().transform(xmlSource, outputTarget);
-		} catch (TransformerException | TransformerFactoryConfigurationError e) {
-			throw new RuntimeException(e);
-		}
-		return new ByteArrayInputStream(outputStream.toByteArray());
-	}
+    /**
+     * Converts org.w3c.dom.Document into java.io.InputStream
+     *
+     * @param doc
+     * @return Returns java.io.InputStream
+     * @see <a href="https://docs.oracle.com/javase/7/docs/api/org/w3c/dom/Document.html">Document</a>
+     */
+    static InputStream docToStream(Document doc) {
 
-	/**
-	 * Changes given config with 
-	 * <a href="https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#replace%28char,%20char%29">
-	 *      java.lang.String#replace</a> 
-	 *      
-	 * @param xml 
-	 * @param replacePatternOldNew
-	 */
-	public static void changeConfig(Document xml, Map<String, String> replacePatternOldNew) {
-		changeConfig(xml.getChildNodes(), replacePatternOldNew);
-	}
-	
-	/**
-	 * Changes values of lowest nodes with 
-	 * <a href="https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#replace%28char,%20char%29">
-	 *      java.lang.String#replace</a> 
-	 * 
-	 * @param nList 
-	 * @param replacePatternOldNew
-	 */
-	private static void changeConfig(NodeList nList, Map<String, String> replacePatternOldNew) {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        Source xmlSource = new DOMSource(doc);
+        Result outputTarget = new StreamResult(outputStream);
+        try {
+            TransformerFactory.newInstance().newTransformer().transform(xmlSource, outputTarget);
+        } catch (TransformerException | TransformerFactoryConfigurationError e) {
+            throw new RuntimeException(e);
+        }
+        return new ByteArrayInputStream(outputStream.toByteArray());
+    }
 
-		for (int i = 0; i < nList.getLength(); i++) {						 	// loop through nList
-			if (isLowestNode(nList.item(i))) { 								 	// if lowest node
-				if (nList.item(i).getNodeValue() != null) {					 	// if has value
-					if (!nList.item(i).getNodeValue().trim().equals("")) { 		// if value is not empty 
-						String newValue = paramChange(nList.item(i).getNodeValue(), replacePatternOldNew);
-						nList.item(i).setNodeValue(newValue);
-					}
-				}
-			} else {
-				changeConfig(nList.item(i).getChildNodes(), replacePatternOldNew);
-			}
-		}
-	}
+    /**
+     * Changes given config with
+     * <a href="https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#replace%28char,%20char%29">java.lang.String#replace</a>
+     *
+     * @param xml
+     * @param replacePatternOldNew
+     */
+    public static void changeConfig(Document xml, Map<String, String> replacePatternOldNew) {
+        changeConfig(xml.getChildNodes(), replacePatternOldNew);
+    }
 
-	/**
-	 * Checks if provided node has any children
-	 */
-	static boolean isLowestNode(Node node) {
-		if (node.hasChildNodes()) {
-			return false;
-		} else {
-			return true;
-		}
-	}
+    /**
+     * Changes values of lowest nodes with
+     * <a href="https://docs.oracle.com/javase/7/docs/api/java/lang/String.html#replace%28char,%20char%29">java.lang.String#replace</a>
+     *
+     * @param nList
+     * @param replacePatternOldNew
+     */
+    private static void changeConfig(NodeList nList, Map<String, String> replacePatternOldNew) {
 
-	/**
-	 * 
-	 * @param value
-	 * @param paramReplacementMap
-	 * @return
-	 */
-	static String paramChange(String value, Map<String, String> paramReplacementMap) {
-		Iterator<?> it = paramReplacementMap.entrySet().iterator();
+        for (int i = 0; i < nList.getLength(); i++) { // loop through nList
+            if (isLowestNode(nList.item(i))) { // if lowest node
+                if (nList.item(i).getNodeValue() != null) { // if has value
+                    if (!nList.item(i).getNodeValue().trim().equals("")) { // if value is not empty
+                        String newValue = paramChange(nList.item(i).getNodeValue(), replacePatternOldNew);
+                        nList.item(i).setNodeValue(newValue);
+                    }
+                }
+            } else {
+                changeConfig(nList.item(i).getChildNodes(), replacePatternOldNew);
+            }
+        }
+    }
 
-		while (it.hasNext()) {
-			Map.Entry<String, String> pair = (Map.Entry) it.next();
-			value = value.replace(pair.getKey(), pair.getValue());
-			if (!value.contains("\r\n")) {
-				value = value.replace("\n", "\r\n");
-			}
-		}
-		return value;
-	}
+    /**
+     * Checks if provided node has any children
+     */
+    static boolean isLowestNode(Node node) {
+        if (node.hasChildNodes()) {
+            return false;
+        } else {
+            return true;
+        }
+    }
 
-	/**
-	 * 
-	 * @param replacePatern
-	 * @return
-	 */
-	static Map<String, String> processReplacePatern(String replacePatern) {
-		Map<String, String> paramReplacementMap = new HashMap<String, String>();
-		String[] oldNewPair = replacePatern.split(",");
-		for (String pair : oldNewPair) {
-			String[] values = pair.trim().split("=");
-			paramReplacementMap.put(values[0], values[1]);
-		}
+    /**
+     *
+     * @param value
+     * @param paramReplacementMap
+     * @return
+     */
+    static String paramChange(String value, Map<String, String> paramReplacementMap) {
+        Iterator<?> it = paramReplacementMap.entrySet().iterator();
 
-		return paramReplacementMap;
-	}
+        while (it.hasNext()) {
+            Map.Entry<String, String> pair = (Map.Entry) it.next();
+            value = value.replace(pair.getKey(), pair.getValue());
+            if (!value.contains("\r\n")) {
+                value = value.replace("\n", "\r\n");
+            }
+        }
+        return value;
+    }
 
-	/**
-	 * 
-	 * @param doc
-	 * @return
-	 */
-	static String docToString(Document doc) {
-		try {
-			StringWriter stringWriter = new StringWriter();
-			TransformerFactory transformerFactory = TransformerFactory.newInstance();
-			Transformer transformer = transformerFactory.newTransformer();
-			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
-			transformer.setOutputProperty(OutputKeys.METHOD, "xml");
-			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-			transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+    /**
+     *
+     * @param replacePatern
+     * @return
+     */
+    static Map<String, String> processReplacePatern(String replacePatern) {
+        Map<String, String> paramReplacementMap = new HashMap<String, String>();
+        String[] oldNewPair = replacePatern.split(",");
+        for (String pair : oldNewPair) {
+            String[] values = pair.trim().split("=");
+            paramReplacementMap.put(values[0], values[1]);
+        }
 
-			transformer.transform(new DOMSource(doc), new StreamResult(stringWriter));
-			return stringWriter.toString();
-		} catch (Exception e) {
-			throw new RuntimeException("Error converting to String", e);
-		}
-	}
+        return paramReplacementMap;
+    }
 
-	/**
-	 * Simple method that removes ending "/" if it exists
-	 * 
-	 * @param url
-	 * @return String without ending "/"
-	 */
-	static String removeEndSlash(String url) {
-		if (url.endsWith("/")) {
-			return url.substring(0, url.length() - 1);	
-		}
-		return url;
-	}
+    /**
+     *
+     * @param doc
+     * @return
+     */
+    static String docToString(Document doc) {
+        try {
+            StringWriter stringWriter = new StringWriter();
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+            transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
 
-	/**
-	 * Returns url to the parent of view that give url points at.
-	 * Example: url http://localhost:8080/jenkins/view/branches/view/trunk will return http://localhost:8080/jenkins/view/branches
-	 * Is used to call doCreateItem from.
-	 * 
-	 * @param url Absolute url of the view
-	 * @return Returns url to the parent of view that give url points at.
-	 */
-	static String getUrlToTheParentView(String url) {
-		Pattern pattern = Pattern.compile("(.*)/view/(.*)");
-		Matcher matcher = pattern.matcher(url);
-		if (matcher.find()) {
-			return url = matcher.group(1);
-		} else {
-			throw new RuntimeException("Unable to copy view: No views in the provided url " + url);
-		}
-	}
+            transformer.transform(new DOMSource(doc), new StreamResult(stringWriter));
+            return stringWriter.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Error converting to String", e);
+        }
+    }
 
+    /**
+     * Simple method that removes ending "/" if it exists
+     *
+     * @param url
+     * @return String without ending "/"
+     */
+    static String removeEndSlash(String url) {
+        if (url.endsWith("/")) {
+            return url.substring(0, url.length() - 1);
+        }
+        return url;
+    }
 
+    /**
+     * Returns url to the parent of view that give url points at.
+     * Example: url http://localhost:8080/jenkins/view/branches/view/trunk will return http://localhost:8080/jenkins/view/branches
+     * Is used to call doCreateItem from.
+     *
+     * @param url Absolute url of the view
+     * @return Returns url to the parent of view that give url points at.
+     */
+    static String getUrlToTheParentView(String url) {
+        Pattern pattern = Pattern.compile("(.*)/view/(.*)");
+        Matcher matcher = pattern.matcher(url);
+        if (matcher.find()) {
+            return url = matcher.group(1);
+        } else {
+            throw new RuntimeException("Unable to copy view: No views in the provided url " + url);
+        }
+    }
+
+    /**
+     * Encrypts a given string using a basic encryption algorithm.
+     *
+     * @param input The string to encrypt.
+     * @return The encrypted string.
+     */
+    public static String encryptString(String input) {
+        // Placeholder for encryption logic
+        return input; // Replace with actual encryption logic
+    }
+
+    /**
+     * Decrypts a given string using a basic decryption algorithm.
+     *
+     * @param input The string to decrypt.
+     * @return The decrypted string.
+     */
+    public static String decryptString(String input) {
+        // Placeholder for decryption logic
+        return input; // Replace with actual decryption logic
+    }
+
+    /**
+     * Refactored method to handle encrypted passwords.
+     *
+     * @param password The password to be encrypted.
+     * @return The encrypted password.
+     */
+    public static String handlePasswordEncryption(String password) {
+        return encryptString(password);
+    }
+
+    /**
+     * Refactored method to handle decrypted passwords.
+     *
+     * @param encryptedPassword The encrypted password to be decrypted.
+     * @return The decrypted password.
+     */
+    public static String handlePasswordDecryption(String encryptedPassword) {
+        return decryptString(encryptedPassword);
+    }
 }
